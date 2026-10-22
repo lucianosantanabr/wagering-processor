@@ -27,13 +27,14 @@ declare module 'fastify' {
 // ───────────── autenticação: ponto de extensão (decisão documentada no ARCHITECTURE.md) ─────────────
 
 export const IS_PUBLIC = 'isPublic';
-/** Marca rotas abertas (health). Hoje todas as rotas passam pelo guard no-op. */
+/** Marca rotas abertas (health e metrics). Hoje todas as rotas passam pelo guard no-op. */
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 
 /**
  * No-op deliberado. Desenho alvo: validar um JWT emitido por um IdP externo (Keycloak/Zitadel)
  * via JWKS e extrair o `providerId` do token, comparando com `providerId` do payload
- * (`ProviderIdentityPort`). Rotas `@Public()` (health) nunca exigem autenticação.
+ * (através de uma porta `ProviderIdentityPort`, AINDA A CRIAR: não existe no código).
+ * Rotas `@Public()` (health e metrics) não exigem autenticação. Ver ARCHITECTURE.md, seção 8.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {

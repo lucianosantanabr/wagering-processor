@@ -79,6 +79,8 @@ A porta do PostgreSQL é **5433** no host (a 5432 costuma estar ocupada por inst
 
 ## 5. Usando a API
 
+> **Autenticação:** não implementada (o enunciado, seção 2, permite). Os endpoints **não exigem credenciais**, por isso os exemplos abaixo não levam header de autorização. A decisão e o desenho que seria adotado (JWT de um IdP externo, respostas `401`/`403`) estão em [`ARCHITECTURE.md`](ARCHITECTURE.md#autenticação-decisão).
+
 > Os exemplos usam `bash`. No PowerShell, aspas dentro de JSON inline são removidas pelo `curl.exe`: grave o corpo em um arquivo e use `--data-binary "@corpo.json"`, ou use `Invoke-RestMethod`.
 
 ```bash

@@ -135,7 +135,7 @@ O mesmo use case atende a entrada HTTP e o consumer SQS.
 | Idempotência | `UNIQUE` no banco + `payloadHash` | Mesmo hash = replay; hash diferente = conflito. Sem cache em memória. |
 | Inbox / Outbox | Mesma transação SQL da mudança financeira | Atomicidade; publisher com `FOR UPDATE SKIP LOCKED`. |
 | Ordenação SQS | FIFO com `MessageGroupId = walletId` | Otimização apenas; a garantia final são as constraints e a inbox. |
-| Autenticação | Não implementada; ponto de extensão explícito | Não pontua no desafio. Desenho alvo: IdP externo (Keycloak/Zitadel) validando JWT via guard. _(detalhar)_ |
+| Autenticação | Não implementada; ponto de extensão explícito | Não pontua no desafio. Desenho alvo: IdP externo (Keycloak/Zitadel) validando JWT via guard (detalhes na seção 8). |
 
 ### Money
 
@@ -273,7 +273,22 @@ NestJS sobre Fastify. Controllers finos (`src/interface/http/`): só traduzem HT
 
 ### Autenticação (decisão)
 
-Não implementada, conforme permitido: não pontua e não deve competir com correção financeira/concorrência. O ponto de extensão é explícito: um `AuthGuard` global (`http.infra.ts`) hoje no-op, que respeita `@Public()`. Desenho alvo: validar JWT de um IdP externo (Keycloak/Zitadel) via JWKS, extrair o `providerId` das claims e exigir que seja igual ao `providerId` do payload (`ProviderIdentityPort`). Sem tabela própria de usuários nem hash de senha. Mensagens da fila são canal interno confiável, mas a identidade do provedor continua sujeita às validações de domínio.
+**Decisão.** Não implementada, como o enunciado permite (seção 2 do enunciado do desafio): autenticação não pontua e não deve competir com correção financeira, concorrência e idempotência. O ponto de extensão é explícito: um `AuthGuard` global (`src/interface/http/http.infra.ts`), hoje **no-op**, que respeita o decorator `@Public()` (usado em `/health/*` e `/metrics`). Consequência: **hoje os endpoints não exigem credenciais**, e o `providerId` do payload não é conferido contra uma identidade (ver seção 13).
+
+**Desenho que adotaria** (sem tabela própria de usuários nem hash de senha):
+
+- **IdP externo** (Keycloak ou Zitadel, que sobem bem em Docker Compose) emitindo tokens **JWT**. Cada provedor é um *client* OAuth2 e obtém o token pelo fluxo **client credentials** (máquina-a-máquina).
+- O `AuthGuard` valida o token a cada requisição: assinatura pelo **JWKS** do IdP (com cache), expiração (`exp`), emissor (`iss`) e audiência (`aud`). Não há tabela de sessões.
+- A identidade do provedor vem de uma claim do token (por exemplo `azp` ou `provider_id`). Uma porta **`ProviderIdentityPort`** (**a ser criada**: ainda não existe no código) a extrairia, desacoplando o guard do IdP.
+- **Autorização:** o `providerId` do corpo precisa ser **igual** ao do token; caso contrário a operação é recusada, o que impede um provedor de lançar transações em nome de outro. Escopos ou papéis separariam quem pode submeter transações (`POST /wagering/transactions`) de quem pode consultar e de quem pode executar a reconciliação (`POST /wallets/:id/reconciliation`, uma operação de administração).
+- **Respostas:** `401` para token ausente, inválido ou expirado; `403` para `providerId` diferente do token ou escopo insuficiente. Entrariam na mesma tabela única de status (`error-mapper.ts`).
+
+**O que continua sem autenticação, mesmo com o desenho acima (como no enunciado):**
+
+- `/health/live` e `/health/ready` ficam abertos.
+- `/metrics` hoje também é aberto. Em produção deve ser restrito por rede (só o coletor de métricas o acessa), porque expõe volumes e taxas de erro.
+- **O canal SQS é tratado como interno e confiável:** quem pode enviar à fila é decidido pelas políticas de IAM da própria fila, não pela aplicação. Mesmo assim, a mensagem **continua sujeita às validações de domínio**, pois passa pelo mesmo caso de uso da API: a wallet precisa existir e ser do `playerId` informado, a moeda deve ser a da wallet, o `providerId` reservado `internal` é recusado e a idempotência se aplica.
+
 ## 9. Transactional Outbox
 
 **Escrita.** O evento é gravado na tabela `outbox_messages` na MESMA transação SQL da mudança financeira (transação, saldo, ledger, inbox). Se algo falhar, nada disso existe; se comitar, o evento existe. Por isso nenhum evento é publicado antes do commit: antes dele ele sequer está visível.
@@ -412,7 +427,7 @@ Invariante final de todos: `wallet.balance == saldo reconstruído pelo ledger` (
 O que **não** foi feito ou foi feito com ressalva, para ser discutido com clareza.
 
 **Escopo do desafio**
-- **Autenticação não implementada** (permitido pelo enunciado). Há um `AuthGuard` global no-op e o desenho-alvo está na seção 8. Sem isso, o `providerId` do payload não é conferido contra uma identidade.
+- **Autenticação não implementada** (permitido pelo enunciado). Há um `AuthGuard` global no-op e o desenho-alvo está na seção 8. Sem isso, o `providerId` do payload não é conferido contra uma identidade, e qualquer chamador pode submeter transações em nome de qualquer provedor. O `/metrics` também é aberto (restringir por rede em produção).
 - **Teste de carga (`bun run test:load`) não foi feito.** Não há números de throughput/p99; o que existe são testes de corretude sob concorrência. Qualquer afirmação de desempenho seria sem base.
 - **OpenTelemetry/dashboard** (opcionais) não foram feitos; há métricas Prometheus e logs JSON.
 
