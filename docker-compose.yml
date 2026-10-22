@@ -1,0 +1,80 @@
+# Compatível com `docker compose` e `podman compose`.
+#
+#   docker compose up -d --build --wait                      -> PostgreSQL + LocalStack + 1 instância do app (porta 3000)
+#   docker compose --profile cluster up -d --build --wait    -> idem, com 3 instâncias (3000, 3001, 3002) no MESMO banco/filas
+#   docker compose up -d --wait postgres localstack          -> só as dependências (para `bun run start` local, porta DB 5433)
+
+x-app: &app
+  build: .
+  image: wagering-app:local
+  depends_on:
+    postgres:
+      condition: service_healthy
+    localstack:
+      condition: service_healthy
+  environment: &app-env
+    DATABASE_URL: postgresql://wagering:wagering@postgres:5432/wagering
+    PORT: "3000"
+    LOG_LEVEL: info
+    AWS_REGION: us-east-1
+    AWS_ENDPOINT_URL: http://localstack:4566
+    AWS_ACCESS_KEY_ID: test
+    AWS_SECRET_ACCESS_KEY: test
+    SQS_QUEUE_NAME: wager-transactions.fifo
+    SQS_DLQ_NAME: wager-transactions-dlq.fifo
+    SQS_EVENTS_QUEUE_NAME: wager-events.fifo
+    SQS_MAX_RECEIVE_COUNT: "5"
+    SQS_VISIBILITY_TIMEOUT_SECONDS: "30"
+  restart: unless-stopped
+  stop_grace_period: 30s # tempo para concluir o que está em andamento no SIGTERM
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wagering
+      POSTGRES_PASSWORD: wagering
+      POSTGRES_DB: wagering
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wagering -d wagering"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  localstack:
+    image: localstack/localstack:3.8
+    environment:
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    healthcheck:
+      # O LocalStack reporta "available" ate o SQS ser usado e "running" depois; as duas significam pronto.
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health | grep -qE '\"sqs\": \"(available|running)\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    <<: *app
+    ports:
+      - "3000:3000"
+
+  # Instâncias adicionais (perfil "cluster"): mesmo código, mesmo banco, mesmas filas.
+  app2:
+    <<: *app
+    profiles: ["cluster"]
+    ports:
+      - "3001:3000"
+  app3:
+    <<: *app
+    profiles: ["cluster"]
+    ports:
+      - "3002:3000"
+
+volumes:
+  pgdata:

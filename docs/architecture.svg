@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="780" viewBox="0 0 1300 780" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">Jungle Wagering Processor: arquitetura</title>
+  <desc id="desc">Provedores enviam transações por HTTP e SQS a N instâncias da aplicação, que gravam saldo, ledger, inbox e outbox na mesma transação PostgreSQL e publicam eventos por uma outbox transacional.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="1300" height="780" fill="#ffffff"/>
+  <text x="20" y="34" font-size="20" font-weight="bold" fill="#1a1a1a">Jungle Wagering Processor · visão geral da arquitetura</text>
+  <text x="20" y="54" font-size="12" fill="#555">entrega at-least-once · idempotência persistente · saldo materializado == ledger · correto com N instâncias</text>
+  <g id="g-app">
+  <rect x="464" y="74" width="480" height="570" rx="10" fill="#ffffff" stroke="#6c8ebf" stroke-width="1" opacity="0.55"/>
+  <rect x="457" y="67" width="480" height="570" rx="10" fill="#ffffff" stroke="#6c8ebf" stroke-width="1" opacity="0.55"/>
+  <rect x="450" y="60" width="480" height="570" rx="10" fill="#f4f8fd" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="462" y="80" font-size="12" font-weight="bold" fill="#333">Aplicação · N instâncias idênticas (HTTP + consumer + workers)</text>
+</g>
+  <g id="g-db">
+  
+  <rect x="980" y="60" width="300" height="450" rx="10" fill="#f3f9f2" stroke="#82b366" stroke-width="1.5"/>
+  <text x="992" y="80" font-size="12" font-weight="bold" fill="#333">PostgreSQL · garantias no schema</text>
+</g>
+  <g id="edge-0">
+  <path d="M170,300 L330,300 L330,135 L470,135" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="176" y="276" text-anchor="start" font-size="10" fill="#444" font-style="italic">HTTP · Idempotency-Key no header</text>
+  <text x="176" y="288" text-anchor="start" font-size="10" fill="#444" font-style="italic">resposta só após o COMMIT</text>
+</g>
+  <g id="edge-1">
+  <path d="M95,350 L95,460 L220,460" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="102" y="400" text-anchor="start" font-size="10" fill="#444" font-style="italic">SQS · at-least-once</text>
+  <text x="102" y="412" text-anchor="start" font-size="10" fill="#444" font-style="italic">messageId + chave no corpo</text>
+</g>
+  <g id="edge-2">
+  <path d="M420,450 L435,450 L435,235 L470,235" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  
+</g>
+  <g id="edge-3">
+  <path d="M320,490 L320,540" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="328" y="512" text-anchor="start" font-size="10" fill="#444" font-style="italic">venenosa ou</text>
+  <text x="328" y="524" text-anchor="start" font-size="10" fill="#444" font-style="italic">retries esgotados</text>
+</g>
+  <g id="edge-4">
+  <path d="M660,135 L700,135" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  
+</g>
+  <g id="edge-5">
+  <path d="M660,235 L700,235" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  
+</g>
+  <g id="edge-6">
+  <path d="M910,212 L980,212" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="945" y="188" text-anchor="middle" font-size="10" fill="#444" font-style="italic">1 transação</text>
+  <text x="945" y="200" text-anchor="middle" font-size="10" fill="#444" font-style="italic">SQL</text>
+</g>
+  <g id="edge-7">
+  <path d="M910,405 L980,405" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="945" y="397" text-anchor="middle" font-size="10" fill="#444" font-style="italic">reaplica</text>
+</g>
+  <g id="edge-8">
+  <path d="M910,495 L980,495" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="945" y="487" text-anchor="middle" font-size="10" fill="#444" font-style="italic">lê pendentes</text>
+</g>
+  <g id="edge-9">
+  <path d="M870,530 L870,620 L980,620" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="878" y="575" text-anchor="start" font-size="10" fill="#444" font-style="italic">publica</text>
+</g>
+  <g id="edge-10">
+  <path d="M1130,650 L1130,690" fill="none" stroke="#333" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="1138" y="674" text-anchor="start" font-size="10" fill="#444" font-style="italic">at-least-once</text>
+</g>
+  <g id="provider">
+    <rect x="20" y="250" width="150" height="100" rx="7" fill="#f5f5f5" stroke="#666666" stroke-width="1.5" />
+    <text x="95" y="289.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Provedores de jogos</text>
+    <text x="95" y="304.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">BET · WIN · LOSS</text>
+    <text x="95" y="319.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">REFUND · ROLLBACK</text>
+  </g>
+  <g id="q-main">
+    <rect x="220" y="430" width="200" height="60" rx="7" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5" />
+    <text x="320" y="456.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wager-transactions.fifo</text>
+    <text x="320" y="471.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">MessageGroupId = walletId</text>
+  </g>
+  <g id="q-dlq">
+    <rect x="220" y="540" width="200" height="60" rx="7" fill="#f8cecc" stroke="#b85450" stroke-width="1.5" />
+    <text x="320" y="566.7" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wager-transactions-dlq.fifo</text>
+    <text x="320" y="581.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">mensagens para investigar</text>
+  </g>
+  <g id="http">
+    <rect x="470" y="100" width="190" height="70" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+    <text x="565" y="124.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">API HTTP</text>
+    <text x="565" y="139.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">NestJS + Fastify</text>
+    <text x="565" y="154.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">wallets · health · metrics</text>
+  </g>
+  <g id="consumer">
+    <rect x="470" y="190" width="190" height="90" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+    <text x="565" y="216.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Consumer SQS</text>
+    <text x="565" y="231.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">inbox (consumer, messageId)</text>
+    <text x="565" y="246.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">ack só após o COMMIT</text>
+    <text x="565" y="261.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">retry com backoff → DLQ</text>
+  </g>
+  <g id="usecase">
+    <rect x="700" y="100" width="210" height="220" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" />
+    <text x="710" y="146.7" text-anchor="start" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">SubmitWagerTransaction</text>
+    <text x="710" y="161.7" text-anchor="start" font-size="11"  fill="#555" xml:space="preserve">mesmo caso de uso em HTTP e SQS</text>
+    <text x="710" y="176.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve"> </text>
+    <text x="710" y="191.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">1  idempotência (key + hash)</text>
+    <text x="710" y="206.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">2  lock da wallet (FOR UPDATE)</text>
+    <text x="710" y="221.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">3  regras de BET, WIN, LOSS,</text>
+    <text x="710" y="236.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">    REFUND e ROLLBACK</text>
+    <text x="710" y="251.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">4  saldo, ledger, inbox, outbox</text>
+    <text x="710" y="266.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">    na MESMA transação SQL</text>
+    <text x="710" y="281.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">5  ack/resposta só após o COMMIT</text>
+  </g>
+  <g id="pending">
+    <rect x="470" y="370" width="440" height="70" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" />
+    <text x="690" y="394.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Worker de PENDING_REFERENCE</text>
+    <text x="690" y="409.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">reaplica as regras quando a referência chega</text>
+    <text x="690" y="424.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">backoff 2s…5min · 15 tentativas → REJECTED (REFERENCE_NOT_FOUND)</text>
+  </g>
+  <g id="publisher">
+    <rect x="470" y="460" width="440" height="70" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" />
+    <text x="690" y="484.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Publisher da outbox (transactional outbox)</text>
+    <text x="690" y="499.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">FOR UPDATE SKIP LOCKED · backoff · pelo menos uma vez</text>
+    <text x="690" y="514.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">lock de linha: vários publishers sem duplicar</text>
+  </g>
+  <g id="obs">
+    <rect x="470" y="550" width="310" height="60" rx="7" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5" />
+    <text x="625" y="576.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Observabilidade</text>
+    <text x="625" y="591.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">logs JSON · /metrics · /health/live · /ready</text>
+  </g>
+  <g id="t-wallets">
+    <rect x="1000" y="100" width="260" height="64" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+    <text x="1130" y="128.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wallets</text>
+    <text x="1130" y="143.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">saldo ≥ 0 · version só sobe com o saldo</text>
+  </g>
+  <g id="t-tx">
+    <rect x="1000" y="180" width="260" height="64" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+    <text x="1130" y="201.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wager_transactions</text>
+    <text x="1130" y="216.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">UNIQUE(idempotency_key, provider+id)</text>
+    <text x="1130" y="231.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">estados terminais imutáveis</text>
+  </g>
+  <g id="t-ledger">
+    <rect x="1000" y="260" width="260" height="64" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+    <text x="1130" y="281.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wallet_ledger_entries</text>
+    <text x="1130" y="296.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">append-only (UPDATE/DELETE bloqueados)</text>
+    <text x="1130" y="311.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">saldo == ledger verificado no COMMIT</text>
+  </g>
+  <g id="t-inbox">
+    <rect x="1000" y="340" width="260" height="64" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+    <text x="1130" y="361.2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">inbox_messages</text>
+    <text x="1130" y="376.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">PK (consumer_name, message_id)</text>
+    <text x="1130" y="391.2" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">mesmo id + corpo diferente → DLQ</text>
+  </g>
+  <g id="t-outbox">
+    <rect x="1000" y="420" width="260" height="64" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" />
+    <text x="1130" y="448.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">outbox_messages</text>
+    <text x="1130" y="463.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">published_at · next_attempt_at · seq</text>
+  </g>
+  <g id="q-events">
+    <rect x="980" y="590" width="300" height="60" rx="7" fill="#ffe6cc" stroke="#d79b00" stroke-width="1.5" />
+    <text x="1130" y="616.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">wager-events.fifo</text>
+    <text x="1130" y="631.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">eventos de integração (envelope versionado)</text>
+  </g>
+  <g id="downstream">
+    <rect x="980" y="690" width="300" height="50" rx="7" fill="#f5f5f5" stroke="#666666" stroke-width="1.5" />
+    <text x="1130" y="711.7" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Consumidores dos eventos</text>
+    <text x="1130" y="726.7" text-anchor="middle" font-size="11"  fill="#1a1a1a" xml:space="preserve">deduplicam por eventId</text>
+  </g>
+  <g id="note">
+    <rect x="20" y="640" width="400" height="100" rx="7" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="30" y="671.7" text-anchor="start" font-size="12" font-weight="bold" fill="#1a1a1a" xml:space="preserve">Garantias no banco (não só no código)</text>
+    <text x="30" y="686.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">UNIQUE · CHECK · FKs compostas · triggers</text>
+    <text x="30" y="701.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">saldo == ledger no COMMIT (constraint trigger)</text>
+    <text x="30" y="716.7" text-anchor="start" font-size="11"  fill="#1a1a1a" xml:space="preserve">reversão única por referência</text>
+  </g>
+</svg>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 1200 960" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">Sequência: estorno que chega antes da aposta (PENDING_REFERENCE)</title>
+  <desc id="desc">O REFUND chega antes da BET que referencia, é gravado como PENDING_REFERENCE sem mexer no saldo; a BET chega e é processada; o worker encontra a referência e aplica o estorno em uma transação.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+  </defs>
+  <rect width="1200" height="960" fill="#ffffff"/>
+  <text x="20" y="30" font-size="20" font-weight="bold" fill="#1a1a1a">Sequência · estorno (REFUND) que chega antes da aposta (BET)</text>
+  <text x="20" y="50" font-size="12" fill="#555">cenário: wallet com 100,00 · REFUND de 25,00 referenciando bet-1 · o worker resolve quando a referência existe</text>
+  <g><rect x="10" y="130" width="1180" height="285" rx="8" fill="#fdf1ef" stroke="#e6b8b2" stroke-width="1"/>
+    <text x="165" y="148" font-size="11" font-weight="bold" fill="#444">FASE 1 · t = 0 s · o estorno chega ANTES da aposta</text></g>
+  <g><rect x="10" y="425" width="1180" height="165" rx="8" fill="#eef4fb" stroke="#b5c9e6" stroke-width="1"/>
+    <text x="165" y="443" font-size="11" font-weight="bold" fill="#444">FASE 2 · t ≈ 1 s · a aposta chega</text></g>
+  <g><rect x="10" y="600" width="1180" height="295" rx="8" fill="#eef7ec" stroke="#b7d6b0" stroke-width="1"/>
+    <text x="165" y="618" font-size="11" font-weight="bold" fill="#444">FASE 3 · t ≥ 2 s · o worker reaplica o estorno</text></g>
+  <line x1="150" y1="116" x2="150" y2="940" stroke="#888" stroke-width="1.2" stroke-dasharray="5 5"/>
+  <line x1="450" y1="116" x2="450" y2="940" stroke="#888" stroke-width="1.2" stroke-dasharray="5 5"/>
+  <line x1="800" y1="116" x2="800" y2="940" stroke="#888" stroke-width="1.2" stroke-dasharray="5 5"/>
+  <line x1="1060" y1="116" x2="1060" y2="940" stroke="#888" stroke-width="1.2" stroke-dasharray="5 5"/>
+  <g><rect x="50" y="66" width="200" height="50" rx="7" fill="#f5f5f5" stroke="#666666" stroke-width="1.5"/>
+    <text x="150" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a">Provedor</text></g>
+  <g><rect x="350" y="66" width="200" height="50" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="450" y="88" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a">Aplicação</text>
+    <text x="450" y="104" text-anchor="middle" font-size="10"  fill="#1a1a1a">API HTTP / consumer SQS</text></g>
+  <g><rect x="700" y="66" width="200" height="50" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="800" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a">PostgreSQL</text></g>
+  <g><rect x="960" y="66" width="200" height="50" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+    <text x="1060" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a1a">Worker de PENDING_REFERENCE</text></g>
+  <g id="note-0">
+    <rect x="830" y="262" width="210" height="78" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2" />
+    <text x="935" y="291.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">saldo INTOCADO</text>
+    <text x="935" y="305.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">sem lançamento no ledger</text>
+    <text x="935" y="319.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">evento PendingReference</text>
+  </g>
+  <g id="note-1">
+    <rect x="830" y="495" width="210" height="44" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2" />
+    <text x="935" y="514.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">saldo 100,00 → 75,00</text>
+    <text x="935" y="528.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">(a aposta é processada normal)</text>
+  </g>
+  <g id="note-2">
+    <rect x="470" y="686" width="310" height="52" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2" />
+    <text x="625" y="709.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">mesmas regras do caminho normal</text>
+    <text x="625" y="723.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">(WagerProcessor): nenhuma regra duplicada</text>
+  </g>
+  <g id="note-3">
+    <rect x="470" y="780" width="310" height="52" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2" />
+    <text x="625" y="803.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">o banco confere saldo == ledger no COMMIT</text>
+    <text x="625" y="817.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">e a reversão passa a contar como feita</text>
+  </g>
+  <g id="note-4">
+    <rect x="470" y="846" width="710" height="36" rx="5" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2" />
+    <text x="825" y="868.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">13) em outro processo: o publisher da outbox publica os eventos em wager-events.fifo (pelo menos uma vez)</text>
+  </g>
+  <g id="note-5">
+    <rect x="20" y="902" width="1160" height="42" rx="5" fill="#ffffff" stroke="#999999" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="600" y="920.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">E se a referência continuasse ausente? O worker reagenda com backoff 2 s · 2ⁿ (teto 5 min); após 15 tentativas (≈ 43 min) o estorno</text>
+    <text x="600" y="934.0" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">vira REJECTED / REFERENCE_NOT_FOUND e sai o evento WagerTransactionRejected, para o provedor reenviar.</text>
+  </g>
+  <g id="msg-0">
+    <line x1="154" y1="200" x2="446" y2="200" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="300" y="180" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">1) REFUND 25,00 (referência = bet-1)</text>
+    <text x="300" y="193" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">por HTTP ou por SQS</text>
+  </g>
+  <g id="msg-1">
+    <line x1="454" y1="248" x2="796" y2="248" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="625" y="228" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">2) busca da idempotency key</text>
+    <text x="625" y="241" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">e lock da wallet (FOR UPDATE)</text>
+  </g>
+  <g id="msg-2">
+    <line x1="454" y1="296" x2="796" y2="296" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="625" y="289" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">3) busca (provedor, bet-1): NÃO existe</text>
+  </g>
+  <g id="msg-3">
+    <line x1="454" y1="350" x2="796" y2="350" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="625" y="330" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">4) INSERT PENDING_REFERENCE (retry em +2 s)</text>
+    <text x="625" y="343" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">+ outbox · COMMIT</text>
+  </g>
+  <g id="msg-4">
+    <line x1="446" y1="395" x2="154" y2="395" stroke="#333" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <text x="300" y="388" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">5) 202 PENDING_REFERENCE (ou ack da mensagem)</text>
+  </g>
+  <g id="msg-5">
+    <line x1="154" y1="478" x2="446" y2="478" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="300" y="471" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">6) BET 25,00 (bet-1)</text>
+  </g>
+  <g id="msg-6">
+    <line x1="454" y1="526" x2="796" y2="526" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="625" y="506" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">7) lock · débito 100 → 75 · ledger</text>
+    <text x="625" y="519" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">+ outbox · COMMIT</text>
+  </g>
+  <g id="msg-7">
+    <line x1="446" y1="572" x2="154" y2="572" stroke="#333" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <text x="300" y="565" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">8) 201 PROCESSED</text>
+  </g>
+  <g id="msg-8">
+    <line x1="1056" y1="668" x2="804" y2="668" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="930" y="661" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">9) há pendentes vencidos?</text>
+  </g>
+  <g id="msg-9">
+    <line x1="1056" y1="716" x2="804" y2="716" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="930" y="696" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">10) lock da wallet</text>
+    <text x="930" y="709" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">+ lock da transação (SKIP LOCKED)</text>
+  </g>
+  <g id="msg-10">
+    <line x1="1056" y1="764" x2="804" y2="764" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="930" y="757" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">11) busca bet-1: existe e confere</text>
+  </g>
+  <g id="msg-11">
+    <line x1="1056" y1="818" x2="804" y2="818" stroke="#333" stroke-width="1.6"  marker-end="url(#arrow)"/>
+    <text x="930" y="798" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">12) PROCESSED · saldo 75 → 100</text>
+    <text x="930" y="811" text-anchor="middle" font-size="11" fill="#1a1a1a" xml:space="preserve">ledger CREDIT · outbox · COMMIT</text>
+  </g>
+</svg>
