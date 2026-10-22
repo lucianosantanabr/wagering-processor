@@ -13,6 +13,7 @@
     "infra:up": "docker compose up -d --wait postgres localstack",
     "diagram": "bun scripts/build-diagram.ts && bun scripts/build-sequence-diagram.ts",
     "demo:sqs": "bun scripts/send-wager-message.ts",
+    "trace:sql": "bun scripts/trace-sql.ts",
     "stack:up": "docker compose up -d --build --wait",
     "stack:cluster": "docker compose --profile cluster up -d --build --wait",
     "infra:down": "docker compose --profile cluster down -v"

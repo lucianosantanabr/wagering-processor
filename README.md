@@ -138,6 +138,8 @@ Mensagens inválidas vão para `wager-transactions-dlq.fifo` com `failureClass` 
 
 Logs: JSON, uma linha por evento, com `correlationId`, `messageId`, `transactionId`, `walletId`, `providerId`; **nunca** valores monetários nem payloads (ver `ARCHITECTURE.md`, seção 11).
 
+**Ver o SQL de verdade:** `bun run trace:sql` sobe um PostgreSQL em container, liga o log de queries do MikroORM e mostra, comando a comando, o que cada operação lê e grava: uma `BET`, um `REFUND` aceito, o mesmo `REFUND` repetido (replay), um segundo estorno da mesma aposta (`ALREADY_REVERSED`) e um estorno sem referência (`PENDING_REFERENCE`). Útil para entender o fluxo de persistência. Variáveis opcionais: `TRACE_PARAMS=0` (mostra `?` em vez dos valores) e `TRACE_MAX_LEN=500` (não trunca tanto as linhas).
+
 ## 7. Testes
 
 ```bash
